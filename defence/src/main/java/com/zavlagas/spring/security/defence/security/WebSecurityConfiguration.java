@@ -5,6 +5,7 @@ import com.zavlagas.spring.security.defence.security.filters.JWTAuthorizationEnt
 import com.zavlagas.spring.security.defence.security.exceptions.JwtAccessDeniedExceptionHandler;
 import com.zavlagas.spring.security.defence.security.exceptions.JwtAuthenticationEntryPointExceptionHandler;
 import com.zavlagas.spring.security.defence.security.jwt.JwtTokenProvider;
+import com.zavlagas.spring.security.defence.security.services.LoginAttemptService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,18 +35,21 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     private JwtTokenProvider jwtTokenProvider;
     private JwtAccessDeniedExceptionHandler jwtAccessDeniedExceptionHandler;
     private JwtAuthenticationEntryPointExceptionHandler jwtAuthenticationEntryPointExceptionHandler;
+    private LoginAttemptService loginAttemptService;
 
     @Autowired
     public WebSecurityConfiguration(
             UserDetailsService userDetailsService,
             JwtTokenProvider jwtTokenProvider,
             JwtAccessDeniedExceptionHandler jwtAccessDeniedExceptionHandler,
-            JwtAuthenticationEntryPointExceptionHandler jwtAuthenticationEntryPointExceptionHandler
+            JwtAuthenticationEntryPointExceptionHandler jwtAuthenticationEntryPointExceptionHandler,
+            LoginAttemptService loginAttemptService
     ) {
         this.userDetailsService = userDetailsService;
         this.jwtTokenProvider = jwtTokenProvider;
         this.jwtAuthenticationEntryPointExceptionHandler = jwtAuthenticationEntryPointExceptionHandler;
         this.jwtAccessDeniedExceptionHandler = jwtAccessDeniedExceptionHandler;
+        this.loginAttemptService = loginAttemptService;
     }
 
 
@@ -67,7 +71,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .exceptionHandling().accessDeniedHandler(jwtAccessDeniedExceptionHandler)
                 .authenticationEntryPoint(jwtAuthenticationEntryPointExceptionHandler)
                 .and()
-                .addFilter(new JWTAuthenticationEntryPointFilter(authenticationManagerBean(), jwtTokenProvider))
+                .addFilter(new JWTAuthenticationEntryPointFilter(authenticationManagerBean(), jwtTokenProvider, loginAttemptService))
                 .addFilter(new JWTAuthorizationEntryPointFilter(authenticationManagerBean()))
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 

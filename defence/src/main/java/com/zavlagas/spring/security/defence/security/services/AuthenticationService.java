@@ -18,14 +18,17 @@ public class AuthenticationService implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private BruteForceAttackService bruteForceAttackService;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Optional<User> user = Optional.ofNullable(userRepository.findUserByUsername(username));
         UserPrincipal userPrincipal;
         if (user.isPresent()) {
-            /*TODO - Validate Login Attempts*/
+            bruteForceAttackService.validateLoginAttempt(user.get());
             userPrincipal = new UserPrincipal(user.get());
+            userRepository.save(user.get());
             return userPrincipal;
         }
         throw new UsernameNotFoundException("Username Not Found By Username : " + username);

@@ -6,6 +6,7 @@ import com.zavlagas.spring.security.defence.entities.User;
 import com.zavlagas.spring.security.defence.security.UserPrincipal;
 import com.zavlagas.spring.security.defence.security.cookies.AppCookie;
 import com.zavlagas.spring.security.defence.security.jwt.JwtTokenProvider;
+import com.zavlagas.spring.security.defence.security.services.LoginAttemptService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,11 +29,15 @@ public class JWTAuthenticationEntryPointFilter extends UsernamePasswordAuthentic
     private Logger logger = LoggerFactory.getLogger(JWTAuthenticationEntryPointFilter.class);
     private JwtTokenProvider jwtProvider;
     private AuthenticationManager authenticationManager;
+    private LoginAttemptService loginAttemptService;
 
 
-    public JWTAuthenticationEntryPointFilter(AuthenticationManager authenticationManager, JwtTokenProvider jwtProvider) {
-        this.jwtProvider = jwtProvider;
+    public JWTAuthenticationEntryPointFilter(AuthenticationManager authenticationManager,
+                                             JwtTokenProvider jwtProvider,
+                                             LoginAttemptService loginAttemptService) {
         this.authenticationManager = authenticationManager;
+        this.jwtProvider = jwtProvider;
+        this.loginAttemptService = loginAttemptService;
         setFilterProcessesUrl("/api/login");
     }
 
@@ -41,22 +46,17 @@ public class JWTAuthenticationEntryPointFilter extends UsernamePasswordAuthentic
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws
             AuthenticationException {
 
-        try {
-            User creds = new ObjectMapper().readValue(
-                    request.getInputStream(), User.class
-            );
-            logger.info(" -> attemptAuthentication :  Username :" + creds.getUsername()
-                    + " + Password : " + creds.getPassword());
-            return authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            creds.getUsername(),
-                            creds.getPassword(),
-                            new HashSet<>()
-                    )
-            );
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+
+        User creds = getUserFromRequest(request);
+        return authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        creds.getUsername(),
+                        creds.getPassword(),
+                        new HashSet<>()
+                )
+        );
+
+
     }
 
     @Override
@@ -64,15 +64,21 @@ public class JWTAuthenticationEntryPointFilter extends UsernamePasswordAuthentic
                                             HttpServletResponse response,
                                             FilterChain chain,
                                             Authentication authResult) throws IOException, ServletException {
-        logger.info("-> successfulAuthentication :" + authResult);
+        UserPrincipal user = (UserPrincipal) authResult.getPrincipal();
         if (authResult.isAuthenticated()) {
+            this.loginAttemptService.evictUserFromLoginAttemptCache(user.getUsername());
             String token = jwtProvider
-                    .generateJwtToken((UserPrincipal) authResult.getPrincipal());
+                    .generateJwtToken(user);
             response.addCookie(createHttpCookie(token));
         }
 
     }
 
+    @Override
+    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException, ServletException {
+        UserPrincipal deniedUser = (UserPrincipal) request.getUserPrincipal();
+        this.loginAttemptService.addUserToLoginAttemptCache(deniedUser.getUsername());
+    }
 
     private Cookie createHttpCookie(String token) {
         Cookie httpCookie = new Cookie(AppCookie.Properties.name, token);
@@ -82,6 +88,18 @@ public class JWTAuthenticationEntryPointFilter extends UsernamePasswordAuthentic
 
         return httpCookie;
 
+    }
+
+    private User getUserFromRequest(HttpServletRequest request) {
+        User user = null;
+        try {
+            user = new ObjectMapper().readValue(
+                    request.getInputStream(), User.class
+            );
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return user;
     }
 
 }
