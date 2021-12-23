@@ -32,7 +32,7 @@ public class DefenceApplication implements CommandLineRunner {
                                 "zavlagas",
                                 bCryptPasswordEncoder.encode("12345"),
                                 "zavlagas@hotmail.com",
-                                Role.ADMIN,
+                                Role.USER,
                                 true,
                                 true
                         )

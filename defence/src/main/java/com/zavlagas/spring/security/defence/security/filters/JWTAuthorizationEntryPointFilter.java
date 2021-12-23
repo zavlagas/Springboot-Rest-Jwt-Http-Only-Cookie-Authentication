@@ -27,11 +27,11 @@ public class JWTAuthorizationEntryPointFilter extends BasicAuthenticationFilter 
 
     private Logger logger = LoggerFactory.getLogger(JWTAuthorizationEntryPointFilter.class);
 
-    @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
-    public JWTAuthorizationEntryPointFilter(AuthenticationManager authenticationManager) {
+    public JWTAuthorizationEntryPointFilter(AuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider) {
         super(authenticationManager);
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
 
@@ -39,7 +39,6 @@ public class JWTAuthorizationEntryPointFilter extends BasicAuthenticationFilter 
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        logger.info("-> doFilterInternal : " + request);
 
         boolean isCookieExist = findIfHttpCookieExist(request);
         if (!isCookieExist) {

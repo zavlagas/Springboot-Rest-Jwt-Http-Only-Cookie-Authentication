@@ -10,7 +10,7 @@ public class BruteForceAttackService {
 
     @Autowired
     private LoginAttemptService loginAttemptService;
-
+    
     public void validateLoginAttempt(User user) {
         if (user.isNotLocked()) {
             if (loginAttemptService.hasExceedMaxAttempts(user.getUsername())) {

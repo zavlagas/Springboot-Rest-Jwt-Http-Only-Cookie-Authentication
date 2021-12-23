@@ -70,6 +70,7 @@ public class JWTAuthenticationEntryPointFilter extends UsernamePasswordAuthentic
             String token = jwtProvider
                     .generateJwtToken(user);
             response.addCookie(createHttpCookie(token));
+            
         }
 
     }

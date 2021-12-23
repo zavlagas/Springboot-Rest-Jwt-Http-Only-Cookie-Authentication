@@ -9,11 +9,11 @@ import java.util.stream.Collectors;
 public enum Role {
 
     USER(Sets.newHashSet(Permission.READ)),
-    ADMIN(Sets.newHashSet(Permission.CREATE,Permission.READ,Permission.UPDATE,Permission.DELETE));
+    ADMIN(Sets.newHashSet(Permission.CREATE, Permission.READ, Permission.UPDATE, Permission.DELETE));
 
     private final Set<Permission> permissions;
 
-    Role(Set<Permission> permissions){
+    Role(Set<Permission> permissions) {
         this.permissions = permissions;
     }
 
@@ -21,10 +21,12 @@ public enum Role {
         return this.permissions;
     }
 
-    public Set<SimpleGrantedAuthority> getGrantedAuthorities(){
+    public Set<SimpleGrantedAuthority> getGrantedAuthorities() {
         return getPermissions()
                 .stream()
-                .map(permission -> new SimpleGrantedAuthority(this.name()+":"+permission.getValue()))
+                .map(permission -> new SimpleGrantedAuthority(this.name() + ":" + permission.getValue()))
                 .collect(Collectors.toSet());
     }
+
+
 }
