@@ -25,7 +25,8 @@ public class SecurityConstants {
             "Origin, Accept",
             "X-Requested-With",
             "Access-Control-Request-Method",
-            "Access-Control-Request-Headers"
+            "Access-Control-Request-Headers",
+            "X-XSRF-TOKEN"
     };
     public static final String[] EXPOSED_HEADERS = {
             "Origin",
@@ -35,6 +36,7 @@ public class SecurityConstants {
             "Access-Control-Allow-Origin",
             "Access-Control-Allow-Headers",
             "Access-Control-Allow-Credentials",
+            "X-XSRF-TOKEN"
     };
 
     public class Messages {
